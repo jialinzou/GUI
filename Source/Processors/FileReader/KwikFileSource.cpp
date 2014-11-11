@@ -20,7 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-#include <h5cpp.h>
+#include <H5Cpp.h>
 #include "KwikFileSource.h"
 
 
@@ -45,12 +45,23 @@ bool KWIKFileSource::Open(File file)
     try
     {
         tmpFile = new H5File(file.getFullPathName().toUTF8(),H5F_ACC_RDONLY);
-        if (!tmpFile->attrExists("kwik_version"))
-        {
-            return false;
-        }
+        herr_t ret_value;
+        if ((ret_value = H5Aexists(tmpFile->getId(),"kwik_version")) <= 0)
+          return false;
 
-        ver = tmpFile->openAttribute("kwik_version");
+        //if (!tmpFile->attrExists("kwik_version"))
+        //{
+            //return false;
+        //}
+
+        //ver = tmpFile->openAttribute("kwik_version");
+        hid_t attr_id = H5Aopen(tmpFile->getId(),"kwik_version",H5P_DEFAULT);
+        if (attr_id > 0) {
+          Attribute ver( attr_id );
+        }
+        else
+          return false;
+
         ver.read(PredType::NATIVE_UINT16,&vernum);
         if ((vernum < MIN_KWIK_VERSION) || (vernum > MAX_KWIK_VERSION))
         {
