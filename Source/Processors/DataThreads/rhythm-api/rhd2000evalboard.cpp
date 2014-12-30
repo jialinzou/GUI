@@ -403,9 +403,9 @@ bool Rhd2000EvalBoard::setSampleRate(AmplifierSampleRate newSampleRate)
             M = 7;
             D = 25;
             break;
-        case SampleRate6250Hz:
-            M = 7;
-            D = 20;
+        case SampleRate5981Hz:
+            M = 70;
+            D = 209;
             break;
         case SampleRate8000Hz:
             M = 112;
@@ -487,8 +487,8 @@ double Rhd2000EvalBoard::getSampleRate() const
         case SampleRate5000Hz:
             return 5000.0;
             break;
-        case SampleRate6250Hz:
-            return 6250.0;
+        case SampleRate5981Hz:
+            return 70000000/11704;
             break;
         case SampleRate8000Hz:
             return 8000.0;

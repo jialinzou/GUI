@@ -1195,9 +1195,9 @@ void RHD2000Thread::setSampleRate(int sampleRateIndex, bool isTemporary)
             boardSampleRate = 5000.0f;
             break;
         case 9:
-            sampleRate = Rhd2000EvalBoard::SampleRate6250Hz;
+            sampleRate = Rhd2000EvalBoard::SampleRate5981Hz;
             numUsbBlocksToRead = 3;
-            boardSampleRate = 6250.0f;
+            boardSampleRate = 5980.9f;
             break;
         case 10:
             sampleRate = Rhd2000EvalBoard::SampleRate8000Hz;

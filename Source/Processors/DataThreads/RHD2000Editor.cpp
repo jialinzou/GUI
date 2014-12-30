@@ -1070,7 +1070,7 @@ SampleRateInterface::SampleRateInterface(RHD2000Thread* board_,
     sampleRateOptions.add("3.33 kS/s");
     sampleRateOptions.add("4.00 kS/s");
     sampleRateOptions.add("5.00 kS/s");
-    sampleRateOptions.add("6.25 kS/s");
+    sampleRateOptions.add("5.98 kS/s");
     sampleRateOptions.add("8.00 kS/s");
     sampleRateOptions.add("10.0 kS/s");
     sampleRateOptions.add("12.5 kS/s");

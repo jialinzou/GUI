@@ -55,7 +55,7 @@ public:
         SampleRate3333Hz,
         SampleRate4000Hz,
         SampleRate5000Hz,
-        SampleRate6250Hz,
+        SampleRate5981Hz,
         SampleRate8000Hz,
         SampleRate10000Hz,
         SampleRate12500Hz,
