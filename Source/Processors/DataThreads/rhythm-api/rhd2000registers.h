@@ -74,7 +74,8 @@ public:
 
     double setUpperBandwidth(double upperBandwidth);
     double setLowerBandwidth(double lowerBandwidth);
-
+	
+	int createCommandListRegisterConfig(vector<int> &commandList, int configValue[],bool calibrate);
     int createCommandListRegisterConfig(vector<int>& commandList, bool calibrate);
     int createCommandListTempSensor(vector<int>& commandList);
     int createCommandListZcheckDac(vector<int>& commandList, double frequency, double amplitude);
@@ -91,7 +92,7 @@ public:
     int createRhd2000Command(Rhd2000CommandType commandType);
     int createRhd2000Command(Rhd2000CommandType commandType, int arg1);
     int createRhd2000Command(Rhd2000CommandType commandType, int arg1, int arg2);
-
+	
 private:
     double sampleRate;
 

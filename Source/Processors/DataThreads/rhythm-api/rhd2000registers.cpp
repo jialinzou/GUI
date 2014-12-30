@@ -877,6 +877,121 @@ int Rhd2000Registers::createCommandListRegisterConfig(vector<int>& commandList, 
     return commandList.size();
 }
 
+// jz nov 5, called by RHD2000Thread::updateRegisters(), with parameter "int configValue[2]"
+int Rhd2000Registers::createCommandListRegisterConfig(vector<int> &commandList, int configValue[], bool calibrate)
+{
+    commandList.clear();    // if command list already exists, erase it and start a new one
+	std::cout << "configvalue in commandlist:" << configValue[0] << configValue[1] << std::endl;  
+	
+    // Start with a few dummy commands in case chip is still powering up
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));   
+
+    // Program RAM registers   
+    //commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  0, getRegisterValue(0)));
+    //commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  1, getRegisterValue(1)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  2, getRegisterValue(2)));
+    
+    
+    // Don't program Register 3 (MUX Load, Temperature Sensor, and Auxiliary Digital Output);
+    // control temperature sensor in another command stream
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  4, getRegisterValue(4)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  5, getRegisterValue(5)));
+    // Don't program Register 6 (Impedance Check DAC) here; create DAC waveform in another command stream
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  7, getRegisterValue(7)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  8, getRegisterValue(8)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite,  9, getRegisterValue(9)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 10, getRegisterValue(10)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 11, getRegisterValue(11)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 12, getRegisterValue(12)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 13, getRegisterValue(13)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 14, getRegisterValue(14)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 15, getRegisterValue(15)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 16, getRegisterValue(16)));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 17, getRegisterValue(17)));
+	
+	if (calibrate) // write configValue[0],[1] to register 30,31 at begin. jz nov 5
+    {
+        commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 30, configValue[1]*2+1)); 
+	    commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 31, configValue[0]*128));	             
+    }
+    else
+    {
+        commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+        commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    }
+	
+	
+    // Read ROM registers
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 62));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 61));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 60));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 59));
+	
+	
+    // Read chip name from ROM
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 48));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 49));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 50));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 51));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 52));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 53));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 54));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 55));
+
+    // Read Intan name from ROM
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 40));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 41));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 42));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 43));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 44));
+
+    // Read back RAM registers to confirm programming
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  0));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  1));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  2));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  3));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  4));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  5));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  6));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  7));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  8));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead,  9));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 10));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 11));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 12));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 13));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 14));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 15));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 16));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 17));
+	
+    // Optionally, run ADC calibration (should only be run once after board is plugged in)
+    if (calibrate)
+    {
+        //commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 30, 07)); 
+	    //commandList.push_back(createRhd2000Command(Rhd2000CommandRegWrite, 31, 128));
+        commandList.push_back(createRhd2000Command(Rhd2000CommandCalibrate));
+         
+    }
+    else
+    {
+        commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+        //commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+        //commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    }
+	
+    // End with a few dummy commands
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63));
+    commandList.push_back(createRhd2000Command(Rhd2000CommandRegRead, 63)); 
+
+
+    return commandList.size();
+}
 // Create a list of 60 commands to sample auxiliary ADC inputs, temperature sensor, and supply
 // voltage sensor.  One temperature reading (one sample of ResultA and one sample of ResultB)
 // is taken during this 60-command sequence.  One supply voltage sample is taken.  Auxiliary

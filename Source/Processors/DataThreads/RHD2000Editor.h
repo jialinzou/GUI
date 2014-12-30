@@ -37,6 +37,9 @@ class DSPInterface;
 class AudioInterface;
 class RHD2000Thread;
 
+class ConfigInterface1; 
+class ConfigInterface2; 
+
 class UtilityButton;
 
 /**
@@ -203,7 +206,10 @@ private:
 
 
     ScopedPointer<Label> audioLabel,ttlSettleLabel,dacHPFlabel ;
-
+	
+	ScopedPointer<ConfigInterface1> configInterface1; 
+	ScopedPointer<ConfigInterface2> configInterface2; 
+	
 	bool saveImpedances, measureWhenRecording;
 
     RHD2000Thread* board;
@@ -362,5 +368,57 @@ private:
     
 };
 
+class ConfigInterface1 : public Component,
+    public ComboBox::Listener
+{
+public:
+    ConfigInterface1(RHD2000Thread*, RHD2000Editor*);
+    ~ConfigInterface1();
+
+    int getSelectedId();
+    void setSelectedId(int);
+
+    void paint(Graphics& g);
+    void comboBoxChanged(ComboBox* cb);
+
+private:
+
+    int ConfigValue;
+    String name;
+
+    RHD2000Thread* board;
+    RHD2000Editor* editor;
+
+    ScopedPointer<ComboBox> valueSelection;
+    StringArray configValueOptions;
+
+};
+
+
+class ConfigInterface2 : public Component,
+    public ComboBox::Listener
+{
+public:
+    ConfigInterface2(RHD2000Thread*, RHD2000Editor*);
+    ~ConfigInterface2();
+
+    int getSelectedId();
+    void setSelectedId(int);
+
+    void paint(Graphics& g);
+    void comboBoxChanged(ComboBox* cb);
+
+private:
+
+    int ConfigValue;
+    String name;
+
+    RHD2000Thread* board;
+    RHD2000Editor* editor;
+
+    ScopedPointer<ComboBox> valueSelection;
+    StringArray configValueOptions;
+
+};
 
 #endif  // __RHD2000EDITOR_H_2AD3C591__

@@ -532,7 +532,16 @@ RHD2000Editor::RHD2000Editor(GenericProcessor* parentNode,
     : VisualizerEditor(parentNode, useDefaultParameterEditors), board(board_)
 {
     canvas = nullptr;
-    desiredWidth = 330;
+    
+    if (board -> ddc232Present || board -> ddc264Present)
+    {
+    	desiredWidth = 470;
+    }
+    else
+    {
+    	desiredWidth = 330;
+    }
+    
     tabText = "FPGA";
 	measureWhenRecording = false;
 	saveImpedances = false;
@@ -568,7 +577,19 @@ RHD2000Editor::RHD2000Editor(GenericProcessor* parentNode,
     rescanButton->addListener(this);
     rescanButton->setTooltip("Check for connected headstages");
     addAndMakeVisible(rescanButton);
-
+	
+	// add DDC config combo box
+	if (board -> ddc232Present || board -> ddc264Present)
+	{
+		configInterface1 = new ConfigInterface1(board, this);
+		addAndMakeVisible(configInterface1);
+		configInterface1->setBounds(330, 25, 100, 40);
+		
+		configInterface2 = new ConfigInterface2(board, this);
+		addAndMakeVisible(configInterface2);
+		configInterface2->setBounds(330, 65, 100, 40);
+	}
+	
     for (int i = 0; i < 2; i++)
     {
         ElectrodeButton* button = new ElectrodeButton(-1);
@@ -878,6 +899,11 @@ void RHD2000Editor::saveCustomParameters(XmlElement* xml)
     xml->setAttribute("DSPCutoffFreq", dspInterface->getDspCutoffFreq());
 	xml->setAttribute("save_impedance_measurements",saveImpedances);
 	xml->setAttribute("auto_measure_impedances",measureWhenRecording);
+	if (board -> ddc232Present || board -> ddc264Present)
+	{
+		xml->setAttribute("Config1", configInterface1->getSelectedId()); 
+    	xml->setAttribute("Config2", configInterface2->getSelectedId()); 
+	}
 }
 
 void RHD2000Editor::loadCustomParameters(XmlElement* xml)
@@ -899,6 +925,11 @@ void RHD2000Editor::loadCustomParameters(XmlElement* xml)
     dspInterface->setDspCutoffFreq(xml->getDoubleAttribute("DSPCutoffFreq"));
 	saveImpedances = xml->getBoolAttribute("save_impedance_measurements");
 	measureWhenRecording = xml->getBoolAttribute("auto_measure_impedances");
+	if (board -> ddc232Present || board -> ddc264Present)
+	{
+		configInterface1->setSelectedId(xml->getIntAttribute("Config1")); 
+    	configInterface2->setSelectedId(xml->getIntAttribute("Config2")); 
+    }
 }
 
 
@@ -1451,5 +1482,162 @@ void DSPInterface::paint(Graphics& g)
     g.setColour(Colours::darkgrey);
 
     g.setFont(Font("Small Text",10,Font::plain));
+
+}
+
+// Configuration Options -------------------------------------------------------------------- 
+
+ConfigInterface1::ConfigInterface1(RHD2000Thread* board_,
+                                         RHD2000Editor* editor_) :
+    board(board_), editor(editor_)
+{
+
+    name = "Version"; 
+
+    if (board -> ddc232Present)
+    {
+    	configValueOptions.add("DDC232C"); 
+    	configValueOptions.add("DDC232CK"); 
+	}
+	else if (board -> ddc264Present)
+	{
+		configValueOptions.add("DDC264C"); 
+    	configValueOptions.add("DDC264CK"); 	
+	}
+
+    valueSelection = new ComboBox("Config Value");
+    valueSelection->addItemList(configValueOptions, 1);
+    valueSelection->setSelectedId(0,dontSendNotification); // changed from 'false' to 'dontSendNotification' (dont know why) 
+    valueSelection->addListener(this);
+
+    valueSelection->setBounds(0,15,100,20);
+    addAndMakeVisible(valueSelection);
+
+
+}
+
+ConfigInterface1::~ConfigInterface1()
+{
+
+}
+
+void ConfigInterface1::comboBoxChanged(ComboBox* cb)
+{
+    if (!(editor->acquisitionIsActive) && board->foundInputSource())
+    {
+        if (cb == valueSelection)
+        {
+            //important
+            board->configValue[0] = ( cb->getSelectedId()-1);       
+			
+            std::cout << "Setting Version to index : " << cb->getSelectedId()-1 << std::endl;
+			std::cout << "configValue:" << board->configValue[0] << board->configValue[1] << std::endl;
+			
+            editor->getEditorViewport()->makeEditorVisible(editor, false, true);
+        }
+    }
+}
+
+int ConfigInterface1::getSelectedId()
+{
+    return valueSelection->getSelectedId();
+}
+
+void ConfigInterface1::setSelectedId(int id)
+{
+    valueSelection->setSelectedId(id);
+}
+
+
+void ConfigInterface1::paint(Graphics& g)
+{
+
+    g.setColour(Colours::darkgrey);
+
+    g.setFont(Font("Small Text",10,Font::plain));
+
+    g.drawText(name, 0, 0, 200, 15, Justification::left, false);
+
+}
+
+// child class of ConfigInterface jz nov 5
+ConfigInterface2::ConfigInterface2(RHD2000Thread* board_,
+                                         RHD2000Editor* editor_) :
+    board(board_), editor(editor_)
+{
+
+    name = "Full-scale Range";
+	
+	if (board -> ddc232Present)
+	{
+		configValueOptions.add("0: 12.5pC");
+		configValueOptions.add("1: 50.0pC");
+		configValueOptions.add("2: 100pC");
+		configValueOptions.add("3: 150pC");
+		configValueOptions.add("4: 200pC");
+		configValueOptions.add("5: 250pC");
+		configValueOptions.add("6: 300pC");
+		configValueOptions.add("7: 350pC");
+	}
+	else if (board -> ddc264Present)
+	{
+		configValueOptions.add("0: 12.5pC");
+		configValueOptions.add("1: 50.0pC");
+		configValueOptions.add("2: 100pC");
+		configValueOptions.add("3: 150pC");
+	}
+
+    valueSelection = new ComboBox("Config Value");
+    valueSelection->addItemList(configValueOptions, 1);
+    valueSelection->setSelectedId(4,dontSendNotification); // changed from 'false' to 'dontSendNotification' (dont know why) 
+    valueSelection->addListener(this);
+
+    valueSelection->setBounds(0,15,100,20);
+    addAndMakeVisible(valueSelection);
+
+
+}
+
+ConfigInterface2::~ConfigInterface2()
+{
+
+}
+
+void ConfigInterface2::comboBoxChanged(ComboBox* cb)
+{
+    if (!(editor->acquisitionIsActive) && board->foundInputSource())
+    {
+        if (cb == valueSelection)
+        {
+            //important
+            board->configValue[1] = ( cb->getSelectedId()-1);       
+			
+            std::cout << "Setting full scale range to index : " << cb->getSelectedId()-1 << std::endl;
+			std::cout << "configvalue:" << board->configValue[0] << board->configValue[1] << std::endl;
+
+            editor->getEditorViewport()->makeEditorVisible(editor, false, true);
+        }
+    }
+}
+
+int ConfigInterface2::getSelectedId()
+{
+    return valueSelection->getSelectedId();
+}
+
+void ConfigInterface2::setSelectedId(int id)
+{
+    valueSelection->setSelectedId(id);
+}
+
+
+void ConfigInterface2::paint(Graphics& g)
+{
+
+    g.setColour(Colours::darkgrey);
+
+    g.setFont(Font("Small Text",10,Font::plain));
+
+    g.drawText(name, 0, 0, 200, 15, Justification::left, false);
 
 }

@@ -38,6 +38,8 @@
 #define CHIP_ID_RHD2132  1
 #define CHIP_ID_RHD2216  2
 #define CHIP_ID_RHD2164  4
+#define CHIP_ID_DDC232  8 // jz dec 29 need to be changed
+#define CHIP_ID_DDC264  16
 #define CHIP_ID_RHD2164_B  1000
 #define REGISTER_59_MISO_A  53
 #define REGISTER_59_MISO_B  58
@@ -81,6 +83,11 @@ RHD2000Thread::RHD2000Thread(SourceNode* sn) : DataThread(sn),
     cableLengthPortA(0.914f), cableLengthPortB(0.914f), cableLengthPortC(0.914f), cableLengthPortD(0.914f), // default is 3 feet (0.914 m),
     audioOutputL(-1), audioOutputR(-1) ,numberingScheme(1)
 {
+    configValue[0] = 0;
+    configValue[1] = 3;
+    ddc232Present = false;
+    ddc264Present = false;
+    
     evalBoard = new Rhd2000EvalBoard;
     dataBlock = new Rhd2000DataBlock(1);
     dataBuffer = new DataBuffer(2, 10000); // start with 2 channels and automatically resize
@@ -512,7 +519,8 @@ void RHD2000Thread::scanPorts()
 
 			id = deviceId(dataBlock, stream, register59Value);
 
-            if (id == CHIP_ID_RHD2132 || id == CHIP_ID_RHD2216 ||
+            if (id == CHIP_ID_DDC232 || id == CHIP_ID_DDC264 ||
+            	id == CHIP_ID_RHD2132 || id == CHIP_ID_RHD2216 || 
                 (id == CHIP_ID_RHD2164 && register59Value == REGISTER_59_MISO_A))
             {
                 //  std::cout << "Device ID found: " << id << std::endl;
@@ -532,7 +540,19 @@ void RHD2000Thread::scanPorts()
             }
         }
     }
-
+    
+    // check if ddc232 or ddc264 are present
+	for (int i = 0; i < MAX_NUM_DATA_STREAMS; ++i)
+    {
+        if (chipId[i] == CHIP_ID_DDC232)
+        {
+        	ddc232Present = true;
+        }
+        else if (chipId[i] == CHIP_ID_DDC264)
+        {
+        	ddc264Present = true;
+        }
+    }
     // std::cout << "Chip IDs found: ";
     // for (int i = 0; i < MAX_NUM_DATA_STREAMS; ++i)
     // {
@@ -1304,14 +1324,20 @@ void RHD2000Thread::updateRegisters()
     chipRegisters.enableAux1(true);
     chipRegisters.enableAux2(true);
     chipRegisters.enableAux3(true);
-
-    chipRegisters.createCommandListRegisterConfig(commandList, true);
+	
+	if (ddc232Present || ddc264Present){
+    	chipRegisters.createCommandListRegisterConfig(commandList, configValue, true);}
+    else{
+    	chipRegisters.createCommandListRegisterConfig(commandList, true);}
     // Upload version with ADC calibration to AuxCmd3 RAM Bank 0.
     evalBoard->uploadCommandList(commandList, Rhd2000EvalBoard::AuxCmd3, 0);
     evalBoard->selectAuxCommandLength(Rhd2000EvalBoard::AuxCmd3, 0,
                                       commandSequenceLength - 1);
-
-    commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, false);
+	
+	if (ddc232Present || ddc264Present){
+    	commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, configValue, false);}
+    else{
+    	commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, false);}    
     // Upload version with no ADC calibration to AuxCmd3 RAM Bank 1.
     evalBoard->uploadCommandList(commandList, Rhd2000EvalBoard::AuxCmd3, 1);
     evalBoard->selectAuxCommandLength(Rhd2000EvalBoard::AuxCmd3, 0,
@@ -1320,7 +1346,10 @@ void RHD2000Thread::updateRegisters()
 
     chipRegisters.setFastSettle(true);
 
-    commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, false);
+    if (ddc232Present || ddc264Present){
+    	commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, configValue, false);}
+    else{
+    	commandSequenceLength = chipRegisters.createCommandListRegisterConfig(commandList, false);}
     // Upload version with fast settle enabled to AuxCmd3 RAM Bank 2.
     evalBoard->uploadCommandList(commandList, Rhd2000EvalBoard::AuxCmd3, 2);
     evalBoard->selectAuxCommandLength(Rhd2000EvalBoard::AuxCmd3, 0,

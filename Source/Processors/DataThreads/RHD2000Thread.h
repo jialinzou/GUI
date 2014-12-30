@@ -57,7 +57,9 @@ class RHD2000Thread : public DataThread, public Timer
 public:
     RHD2000Thread(SourceNode* sn);
     ~RHD2000Thread();
-
+	int configValue [2]; // configValue[0] chip version, configValue[1] cap range
+	bool ddc232Present;  // 1 present, 0 not present
+	bool ddc264Present;  // 1 present, 0 not present
     bool foundInputSource();
     int getNumChannels();
     float getSampleRate();
