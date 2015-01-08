@@ -647,6 +647,7 @@ void RHD2000Thread::scanPorts()
 int RHD2000Thread::deviceId(Rhd2000DataBlock* dataBlock, int stream, int &register59Value)
 {
     bool intanChipPresent;
+    bool ddcPresent;
 
     // First, check ROM registers 32-36 to verify that they hold 'INTAN'.
     // This is just used to verify that we are getting good data over the SPI
@@ -662,10 +663,16 @@ int RHD2000Thread::deviceId(Rhd2000DataBlock* dataBlock, int stream, int &regist
                         dataBlock->auxiliaryData[stream][2][34] == 84 && // T = 84
                         dataBlock->auxiliaryData[stream][2][35] == 65 && // A = 65
                         dataBlock->auxiliaryData[stream][2][36] == 78);  // N = 78
-
+                        
+	ddcChipPresent = (dataBlock->auxiliaryData[stream][2][32] == 84 && // T = 84
+                      dataBlock->auxiliaryData[stream][2][33] == 73 && // I = 73
+                      dataBlock->auxiliaryData[stream][2][34] == 68 && // D = 68
+                      dataBlock->auxiliaryData[stream][2][35] == 68 && // D = 68
+                      dataBlock->auxiliaryData[stream][2][36] == 67);  // C = 67
+                        
     // If the SPI communication is bad, return -1.  Otherwise, return the Intan
     // chip ID number stored in ROM regstier 63.
-    if (!intanChipPresent)
+    if (!(intanChipPresent || ddcPresent))
     {
 		register59Value = -1;
         return -1;
